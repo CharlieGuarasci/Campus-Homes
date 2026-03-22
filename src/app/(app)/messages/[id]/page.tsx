@@ -66,10 +66,12 @@ export default function ChatPage() {
   const initials = getAvatarInitials(otherUser?.full_name ?? null);
 
   return (
-    <div className="flex flex-col h-screen">
+    // h-[100dvh] on mobile fills viewport; md:h-full fills the flex container from messages/layout.tsx
+    <div className="flex flex-col h-[100dvh] md:h-full">
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-[#1a2035] px-4 pt-safe-top pb-3 flex items-center gap-3">
-        <Link href="/messages" className="text-white/70 hover:text-white shrink-0">
+      <header className="shrink-0 bg-[#1a2035] px-4 pt-safe-top pb-3 flex items-center gap-3">
+        {/* Back link — only visible on mobile */}
+        <Link href="/messages" className="md:hidden text-white/70 hover:text-white shrink-0">
           <ChevronLeft className="h-6 w-6" />
         </Link>
         <Avatar className="h-9 w-9 shrink-0">
@@ -108,7 +110,7 @@ export default function ChatPage() {
       </div>
 
       {/* Input bar */}
-      <div className="border-t border-gray-200 bg-white px-4 py-3 safe-area-pb">
+      <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-3 safe-area-pb">
         <form onSubmit={handleSend} className="flex gap-2">
           <Input
             value={text}

@@ -132,7 +132,7 @@ export default function CreateListingPage() {
         <h1 className="text-lg font-bold text-white">New listing</h1>
       </header>
 
-      <form onSubmit={handleSubmit} className="px-4 py-4 space-y-5">
+      <form onSubmit={handleSubmit} className="px-4 py-4 space-y-5 max-w-2xl mx-auto">
         {/* Photos */}
         <div>
           <Label className="mb-2 block">Photos <span className="text-gray-400 font-normal">(up to {MAX_IMAGES})</span></Label>

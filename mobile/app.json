@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "Exchange Housing",
+    "slug": "exchange-housing",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#1a2035"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.exchange.housing"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1a2035"
+      },
+      "package": "com.exchange.housing"
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Exchange Housing needs access to your photos to upload listing images."
+        }
+      ],
+      "expo-asset",
+      "expo-font"
+    ]
+  }
+}

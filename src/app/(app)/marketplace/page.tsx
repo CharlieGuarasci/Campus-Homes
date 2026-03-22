@@ -39,12 +39,14 @@ export default function MarketplacePage() {
     <>
       {/* Header */}
       <header className="sticky top-0 z-30 bg-[#1a2035] px-4 pt-safe-top pb-3 shadow-md">
-        <div className="flex items-center gap-2 pt-2">
+        <div className="flex items-center gap-2 pt-2 md:hidden">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500">
             <span className="text-sm font-bold text-white">E</span>
           </div>
           <h1 className="text-lg font-bold text-white">Exchange Housing</h1>
         </div>
+        {/* Desktop: just the page title, logo is in sidebar */}
+        <h1 className="hidden md:block text-xl font-bold text-white pt-2">Marketplace</h1>
         <div className="mt-3 flex gap-2">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -59,17 +61,19 @@ export default function MarketplacePage() {
         </div>
       </header>
 
-      {/* Feed */}
-      <div className="px-4 py-4 space-y-3">
+      {/* Feed — single col on mobile, 2-col grid on desktop */}
+      <div className="px-4 py-4 max-w-5xl mx-auto">
         {error && (
-          <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-600">
+          <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-600 mb-3">
             Error loading listings: {error}
           </div>
         )}
         {loading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-64 rounded-xl bg-gray-200 animate-pulse" />
-          ))
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-64 rounded-xl bg-gray-200 animate-pulse" />
+            ))}
+          </div>
         ) : listingsWithSaved.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <p className="text-4xl mb-3">🏠</p>
@@ -77,27 +81,28 @@ export default function MarketplacePage() {
             <p className="mt-1 text-sm text-gray-400">Try adjusting your filters</p>
           </div>
         ) : (
-          listingsWithSaved.map((listing) => (
-            <ListingCard
-              key={listing.id}
-              listing={listing}
-              onTap={handleCardTap}
-              onSaveToggle={handleSaveToggle}
-            />
-          ))
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {listingsWithSaved.map((listing) => (
+              <ListingCard
+                key={listing.id}
+                listing={listing}
+                onTap={handleCardTap}
+                onSaveToggle={handleSaveToggle}
+              />
+            ))}
+          </div>
         )}
       </div>
 
-      {/* FAB */}
+      {/* FAB — adjusted position on desktop (no bottom nav offset) */}
       <Link
         href="/create-listing"
-        className="fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-transform"
+        className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-transform"
         aria-label="Create listing"
       >
         <Plus className="h-6 w-6" />
       </Link>
 
-      {/* Listing Drawer */}
       <ListingDrawer
         listing={selectedListing}
         open={drawerOpen}
