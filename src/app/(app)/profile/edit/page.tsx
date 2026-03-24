@@ -4,10 +4,6 @@ import { useRouter } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
 
@@ -68,46 +64,53 @@ export default function EditProfilePage() {
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-[#1a2035] px-4 pt-safe-top pb-3 flex items-center gap-3">
-        <Link href="/profile" className="text-white/70 hover:text-white">
-          <ChevronLeft className="h-6 w-6" />
+      <header className="sticky top-0 z-30 bg-white border-b border-[#EBEBEA] px-4 py-3 flex items-center gap-3">
+        <Link href="/profile" className="text-[#6B6B6B] hover:text-[#191919]">
+          <ChevronLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-lg font-bold text-white">Edit profile</h1>
+        <h1 className="text-base font-medium text-[#191919]">Edit profile</h1>
       </header>
 
-      <form onSubmit={handleSubmit} className="px-4 py-4 space-y-5">
+      <form onSubmit={handleSubmit} className="px-4 py-5 space-y-5 max-w-lg mx-auto">
         <div className="space-y-1.5">
-          <Label>Email</Label>
-          <Input value={user?.email ?? ''} disabled className="opacity-60" />
-          <p className="text-xs text-gray-400">Email cannot be changed.</p>
+          <label className="text-xs font-medium text-[#6B6B6B] uppercase tracking-wide">Email</label>
+          <input
+            value={user?.email ?? ''}
+            disabled
+            className="w-full h-9 rounded-md border border-[#EBEBEA] bg-[#F7F7F5] px-3 text-sm text-[#A0A0A0] cursor-not-allowed"
+          />
+          <p className="text-xs text-[#A0A0A0]">Email cannot be changed.</p>
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="fullName">Full name</Label>
-          <Input
+          <label htmlFor="fullName" className="text-xs font-medium text-[#6B6B6B] uppercase tracking-wide">Full name</label>
+          <input
             id="fullName"
             placeholder="Your name"
             value={form.fullName}
             onChange={(e) => update('fullName', e.target.value)}
+            className="w-full h-9 rounded-md border border-[#EBEBEA] bg-white px-3 text-sm text-[#191919] placeholder:text-[#A0A0A0] focus:outline-none focus:border-[#2383E2] transition-colors"
           />
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="program">Program</Label>
-          <Input
+          <label htmlFor="program" className="text-xs font-medium text-[#6B6B6B] uppercase tracking-wide">Program</label>
+          <input
             id="program"
             placeholder="e.g. Commerce, Engineering…"
             value={form.program}
             onChange={(e) => update('program', e.target.value)}
+            className="w-full h-9 rounded-md border border-[#EBEBEA] bg-white px-3 text-sm text-[#191919] placeholder:text-[#A0A0A0] focus:outline-none focus:border-[#2383E2] transition-colors"
           />
         </div>
 
         <div className="space-y-1.5">
-          <Label>Year of study</Label>
+          <label className="text-xs font-medium text-[#6B6B6B] uppercase tracking-wide">Year of study</label>
           <Select value={form.yearOfStudy} onValueChange={(v) => update('yearOfStudy', v)}>
-            <SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger>
+            <SelectTrigger className="border-[#EBEBEA] focus:border-[#2383E2]">
+              <SelectValue placeholder="Select year" />
+            </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">Not specified</SelectItem>
               {[1, 2, 3, 4, 5].map((y) => (
                 <SelectItem key={y} value={String(y)}>Year {y}</SelectItem>
               ))}
@@ -117,26 +120,31 @@ export default function EditProfilePage() {
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="bio">Bio</Label>
-          <Textarea
+          <label htmlFor="bio" className="text-xs font-medium text-[#6B6B6B] uppercase tracking-wide">Bio</label>
+          <textarea
             id="bio"
             placeholder="A little about yourself…"
             value={form.bio}
             onChange={(e) => update('bio', e.target.value)}
-            className="min-h-[100px]"
+            rows={4}
+            className="w-full rounded-md border border-[#EBEBEA] bg-white px-3 py-2 text-sm text-[#191919] placeholder:text-[#A0A0A0] focus:outline-none focus:border-[#2383E2] transition-colors resize-none"
           />
         </div>
 
         {error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 border border-red-200">{error}</p>
+          <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
         )}
         {success && (
-          <p className="rounded-lg bg-green-50 px-3 py-2 text-sm text-green-600 border border-green-200">Profile updated!</p>
+          <p className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-600">Profile updated!</p>
         )}
 
-        <Button type="submit" className="w-full" disabled={loading}>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full h-9 rounded-md bg-[#2383E2] text-white text-sm font-medium hover:bg-[#1a6fc9] disabled:opacity-50 transition-colors"
+        >
           {loading ? 'Saving…' : 'Save changes'}
-        </Button>
+        </button>
       </form>
     </>
   );

@@ -15,31 +15,19 @@ export function useListings(filters: ListingFilters = {}) {
 
     let query = supabase
       .from('listings')
-      .select('*, profiles!listings_user_id_fkey(*), listing_images(*)')
+      .select('*, profiles!listings_user_id_fkey(*), listing_images(*), listing_housemates(*)')
       .eq('status', 'active')
       .order('created_at', { ascending: false });
 
     if (filters.search) {
       query = query.or(`title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
     }
-    if (filters.minPrice !== undefined) {
-      query = query.gte('price_per_month', filters.minPrice);
-    }
-    if (filters.maxPrice !== undefined) {
-      query = query.lte('price_per_month', filters.maxPrice);
-    }
-    if (filters.bedrooms !== undefined) {
-      query = query.eq('bedrooms', filters.bedrooms);
-    }
-    if (filters.isFurnished) {
-      query = query.eq('is_furnished', true);
-    }
-    if (filters.utilitiesIncluded) {
-      query = query.eq('utilities_included', true);
-    }
-    if (filters.availableFrom) {
-      query = query.lte('available_from', filters.availableFrom);
-    }
+    if (filters.minPrice !== undefined) query = query.gte('price_per_month', filters.minPrice);
+    if (filters.maxPrice !== undefined) query = query.lte('price_per_month', filters.maxPrice);
+    if (filters.bedrooms !== undefined) query = query.eq('bedrooms', filters.bedrooms);
+    if (filters.isFurnished) query = query.eq('is_furnished', true);
+    if (filters.utilitiesIncluded) query = query.eq('utilities_included', true);
+    if (filters.availableFrom) query = query.lte('available_from', filters.availableFrom);
 
     const { data, error: err } = await query;
     if (err) {

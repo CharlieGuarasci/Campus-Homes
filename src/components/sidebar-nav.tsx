@@ -1,9 +1,10 @@
 'use client';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Home, MessageCircle, Clipboard, User } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Home, MessageCircle, Clipboard, User, LogOut } from 'lucide-react';
 import { cn, getAvatarInitials } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { createClient } from '@/lib/supabase/client';
+import { useRef } from 'react';
 import type { Profile } from '@/types';
 
 const tabs = [
@@ -20,24 +21,30 @@ interface SidebarNavProps {
 
 export function SidebarNav({ profile, unreadCount = 0 }: SidebarNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = useRef(createClient()).current;
+
+  async function handleSignOut() {
+    await supabase.auth.signOut();
+    router.push('/login');
+  }
+
+  const initials = getAvatarInitials(profile?.full_name ?? null);
 
   return (
-    <aside className="fixed left-0 top-0 h-full w-64 bg-[#1a2035] flex flex-col z-40">
-      {/* Logo */}
-      <div className="px-5 py-5 border-b border-white/10">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-blue-500 flex items-center justify-center shrink-0">
-            <span className="text-sm font-bold text-white">E</span>
+    <aside className="fixed left-0 top-0 h-full w-60 bg-white border-r border-[#EBEBEA] flex flex-col z-40">
+      {/* App name */}
+      <div className="px-4 py-4 border-b border-[#EBEBEA]">
+        <Link href="/marketplace" className="flex items-center gap-2.5">
+          <div className="h-6 w-6 rounded bg-[#2383E2] flex items-center justify-center shrink-0">
+            <span className="text-[11px] font-semibold text-white">E</span>
           </div>
-          <div>
-            <p className="text-sm font-bold text-white leading-tight">Exchange Housing</p>
-            <p className="text-xs text-white/50">Find your home away</p>
-          </div>
-        </div>
+          <span className="text-sm font-medium text-[#191919]">Exchange Housing</span>
+        </Link>
       </div>
 
       {/* Nav links */}
-      <nav className="flex-1 px-3 py-4 space-y-0.5">
+      <nav className="flex-1 px-2 py-3 space-y-0.5">
         {tabs.map(({ href, label, icon: Icon }) => {
           const isActive = pathname.startsWith(href);
           const isMessages = href === '/messages';
@@ -46,16 +53,16 @@ export function SidebarNav({ profile, unreadCount = 0 }: SidebarNavProps) {
               key={href}
               href={href}
               className={cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors',
+                'flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm transition-colors',
                 isActive
-                  ? 'bg-white/10 text-white'
-                  : 'text-white/60 hover:text-white hover:bg-white/5'
+                  ? 'bg-[#F0F0EE] text-[#2383E2]'
+                  : 'text-[#6B6B6B] hover:bg-[#F7F7F5] hover:text-[#191919]'
               )}
             >
               <span className="relative shrink-0">
-                <Icon className="h-5 w-5" strokeWidth={isActive ? 2.5 : 2} />
+                <Icon className="h-[18px] w-[18px]" strokeWidth={1.5} />
                 {isMessages && unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-[#2383E2] text-[9px] font-semibold text-white flex items-center justify-center">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
@@ -66,27 +73,26 @@ export function SidebarNav({ profile, unreadCount = 0 }: SidebarNavProps) {
         })}
       </nav>
 
-      {/* User info at bottom */}
-      <div className="px-4 py-4 border-t border-white/10">
+      {/* User row at bottom */}
+      <div className="px-2 py-3 border-t border-[#EBEBEA] space-y-0.5">
         <Link
           href="/profile"
-          className="flex items-center gap-3 rounded-xl p-2 hover:bg-white/5 transition-colors"
+          className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-md hover:bg-[#F7F7F5] transition-colors"
         >
-          <Avatar className="h-9 w-9 shrink-0">
-            {profile?.avatar_url && <AvatarImage src={profile.avatar_url} />}
-            <AvatarFallback className="text-xs bg-blue-600 text-white">
-              {getAvatarInitials(profile?.full_name ?? null)}
-            </AvatarFallback>
-          </Avatar>
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-white truncate">
-              {profile?.full_name ?? 'My Profile'}
-            </p>
-            <p className="text-xs text-white/50 truncate">
-              {profile?.university ?? "Queen's University"}
-            </p>
+          <div className="h-6 w-6 rounded-full bg-[#2383E2] flex items-center justify-center shrink-0">
+            <span className="text-[10px] font-semibold text-white">{initials}</span>
           </div>
+          <p className="text-xs font-medium text-[#191919] truncate flex-1 min-w-0">
+            {profile?.full_name ?? 'My profile'}
+          </p>
         </Link>
+        <button
+          onClick={handleSignOut}
+          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-sm text-[#6B6B6B] hover:bg-[#F7F7F5] hover:text-[#191919] transition-colors"
+        >
+          <LogOut className="h-[18px] w-[18px] shrink-0" strokeWidth={1.5} />
+          Sign out
+        </button>
       </div>
     </aside>
   );

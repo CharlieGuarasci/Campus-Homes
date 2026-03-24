@@ -4,13 +4,9 @@ import { useRouter } from 'next/navigation';
 import { X, Upload, ChevronLeft } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/use-auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { LISTING_TAGS, NEIGHBORHOODS, MAX_IMAGES, LISTING_IMAGE_BUCKET } from '@/lib/constants';
+import { LISTING_TAGS, NEIGHBORHOODS, MAX_IMAGES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
@@ -26,6 +22,8 @@ export default function CreateListingPage() {
     price: '',
     address: '',
     neighborhood: '',
+    latitude: '',
+    longitude: '',
     bedrooms: '',
     bathrooms: '',
     isFurnished: false,
@@ -71,80 +69,90 @@ export default function CreateListingPage() {
     setError('');
     setLoading(true);
 
-    // Insert listing
-    const { data: listing, error: insertError } = await supabase
-      .from('listings')
-      .insert({
-        user_id: user.id,
-        title: form.title,
-        description: form.description || null,
-        price_per_month: parseFloat(form.price),
-        address: form.address || null,
-        neighborhood: form.neighborhood || null,
-        bedrooms: form.bedrooms ? parseInt(form.bedrooms) : null,
-        bathrooms: form.bathrooms ? parseInt(form.bathrooms) : null,
-        is_furnished: form.isFurnished,
-        utilities_included: form.utilitiesIncluded,
-        available_from: form.availableFrom,
-        available_to: form.availableTo,
-        tags: selectedTags.length > 0 ? selectedTags : null,
-        status: 'active',
-      })
-      .select()
-      .single();
+    const listingData = {
+      title: form.title,
+      description: form.description || null,
+      price: form.price,
+      address: form.address || null,
+      neighborhood: form.neighborhood || null,
+      latitude: form.latitude ? form.latitude : null,
+      longitude: form.longitude ? form.longitude : null,
+      bedrooms: form.bedrooms || null,
+      bathrooms: form.bathrooms || null,
+      isFurnished: form.isFurnished,
+      utilitiesIncluded: form.utilitiesIncluded,
+      availableFrom: form.availableFrom,
+      availableTo: form.availableTo,
+      tags: selectedTags,
+    };
 
-    if (insertError || !listing) {
-      setError(insertError?.message ?? 'Failed to create listing.');
+    const response = await fetch('/api/listings/create', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(listingData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      setError(errorData.error || 'Failed to create listing');
       setLoading(false);
       return;
     }
 
-    // Upload images
+    const { listing } = await response.json();
+
     for (let i = 0; i < images.length; i++) {
       const file = images[i];
-      const ext = file.name.split('.').pop();
-      const path = `${user.id}/${listing.id}/${i}.${ext}`;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('listingId', listing.id);
+      formData.append('displayOrder', i.toString());
 
-      const { error: uploadError } = await supabase.storage
-        .from(LISTING_IMAGE_BUCKET)
-        .upload(path, file, { contentType: file.type });
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
 
-      if (!uploadError) {
-        const { data: urlData } = supabase.storage.from(LISTING_IMAGE_BUCKET).getPublicUrl(path);
-        await supabase.from('listing_images').insert({
-          listing_id: listing.id,
-          image_url: urlData.publicUrl,
-          display_order: i,
-        });
+      if (!response.ok) {
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to upload image');
+        setLoading(false);
+        return;
       }
     }
 
     router.push('/marketplace');
   }
 
+  const fieldClass = "w-full h-9 rounded-md border border-[#EBEBEA] bg-white px-3 text-sm text-[#191919] placeholder:text-[#A0A0A0] focus:outline-none focus:border-[#2383E2] transition-colors";
+  const labelClass = "block text-xs font-medium text-[#6B6B6B] uppercase tracking-wide mb-1.5";
+
   return (
     <>
-      {/* Header */}
-      <header className="sticky top-0 z-30 bg-[#1a2035] px-4 pt-safe-top pb-3 flex items-center gap-3">
-        <Link href="/marketplace" className="text-white/70 hover:text-white">
-          <ChevronLeft className="h-6 w-6" />
+      <header className="sticky top-0 z-30 bg-white border-b border-[#EBEBEA] px-4 py-3 flex items-center gap-3">
+        <Link href="/marketplace" className="text-[#6B6B6B] hover:text-[#191919]">
+          <ChevronLeft className="h-5 w-5" />
         </Link>
-        <h1 className="text-lg font-bold text-white">New listing</h1>
+        <h1 className="text-base font-medium text-[#191919]">New listing</h1>
       </header>
 
-      <form onSubmit={handleSubmit} className="px-4 py-4 space-y-5 max-w-2xl mx-auto">
+      <form onSubmit={handleSubmit} className="px-4 py-5 space-y-5 max-w-2xl mx-auto">
         {/* Photos */}
         <div>
-          <Label className="mb-2 block">Photos <span className="text-gray-400 font-normal">(up to {MAX_IMAGES})</span></Label>
+          <label className={labelClass}>
+            Photos <span className="normal-case font-normal text-[#A0A0A0]">(up to {MAX_IMAGES})</span>
+          </label>
           <div className="flex gap-2 flex-wrap">
             {previews.map((src, i) => (
-              <div key={i} className="relative h-20 w-20 rounded-lg overflow-hidden bg-gray-100">
+              <div key={i} className="relative h-20 w-20 rounded-lg overflow-hidden bg-[#F7F7F5]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={src} alt={`Preview ${i + 1}`} className="h-full w-full object-cover" />
                 <button
                   type="button"
                   onClick={() => removeImage(i)}
-                  className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/60 flex items-center justify-center text-white"
+                  className="absolute top-1 right-1 h-5 w-5 rounded-full bg-black/50 flex items-center justify-center text-white"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -154,7 +162,7 @@ export default function CreateListingPage() {
               <button
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
-                className="h-20 w-20 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-400 transition-colors"
+                className="h-20 w-20 rounded-lg border-2 border-dashed border-[#EBEBEA] flex flex-col items-center justify-center text-[#A0A0A0] hover:border-[#2383E2] hover:text-[#2383E2] transition-colors"
               >
                 <Upload className="h-5 w-5" />
                 <span className="text-[10px] mt-1">Add photo</span>
@@ -172,33 +180,35 @@ export default function CreateListingPage() {
         </div>
 
         {/* Title */}
-        <div className="space-y-1.5">
-          <Label htmlFor="title">Title *</Label>
-          <Input
+        <div>
+          <label htmlFor="title" className={labelClass}>Title *</label>
+          <input
             id="title"
             placeholder="e.g. Cozy 1-bedroom near Queen's campus"
             value={form.title}
             onChange={(e) => update('title', e.target.value)}
             required
+            className={fieldClass}
           />
         </div>
 
         {/* Description */}
-        <div className="space-y-1.5">
-          <Label htmlFor="description">Description</Label>
-          <Textarea
+        <div>
+          <label htmlFor="description" className={labelClass}>Description</label>
+          <textarea
             id="description"
             placeholder="Describe the place, what's included, house rules…"
             value={form.description}
             onChange={(e) => update('description', e.target.value)}
-            className="min-h-[100px]"
+            rows={4}
+            className="w-full rounded-md border border-[#EBEBEA] bg-white px-3 py-2 text-sm text-[#191919] placeholder:text-[#A0A0A0] focus:outline-none focus:border-[#2383E2] transition-colors resize-none"
           />
         </div>
 
         {/* Price */}
-        <div className="space-y-1.5">
-          <Label htmlFor="price">Price per month (CA$) *</Label>
-          <Input
+        <div>
+          <label htmlFor="price" className={labelClass}>Price per month (CA$) *</label>
+          <input
             id="price"
             type="number"
             placeholder="1200"
@@ -206,14 +216,15 @@ export default function CreateListingPage() {
             value={form.price}
             onChange={(e) => update('price', e.target.value)}
             required
+            className={fieldClass}
           />
         </div>
 
-        {/* Neighborhood */}
-        <div className="space-y-1.5">
-          <Label>Neighbourhood</Label>
+        {/* Neighbourhood */}
+        <div>
+          <label className={labelClass}>Neighbourhood</label>
           <Select value={form.neighborhood} onValueChange={(v) => update('neighborhood', v)}>
-            <SelectTrigger>
+            <SelectTrigger className="border-[#EBEBEA]">
               <SelectValue placeholder="Select neighbourhood" />
             </SelectTrigger>
             <SelectContent>
@@ -225,22 +236,57 @@ export default function CreateListingPage() {
         </div>
 
         {/* Address */}
-        <div className="space-y-1.5">
-          <Label htmlFor="address">Address <span className="text-gray-400 font-normal">(optional)</span></Label>
-          <Input
+        <div>
+          <label htmlFor="address" className={labelClass}>
+            Address <span className="normal-case font-normal text-[#A0A0A0]">(optional)</span>
+          </label>
+          <input
             id="address"
             placeholder="123 University Ave, Kingston, ON"
             value={form.address}
             onChange={(e) => update('address', e.target.value)}
+            className={fieldClass}
           />
+        </div>
+
+        {/* Coordinates */}
+        <div>
+          <label className={labelClass}>
+            Coordinates <span className="normal-case font-normal text-[#A0A0A0]">(optional — for map pin)</span>
+          </label>
+          <p className="text-xs text-[#A0A0A0] mb-2">
+            Find coordinates at{' '}
+            <a href="https://maps.google.com" target="_blank" rel="noopener noreferrer" className="text-[#2383E2] hover:underline">
+              maps.google.com
+            </a>
+            {' '}— right-click your address and copy the lat/lng.
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="number"
+              step="any"
+              placeholder="Latitude (e.g. 44.2253)"
+              value={form.latitude}
+              onChange={(e) => update('latitude', e.target.value)}
+              className={fieldClass + ' flex-1'}
+            />
+            <input
+              type="number"
+              step="any"
+              placeholder="Longitude (e.g. -76.4951)"
+              value={form.longitude}
+              onChange={(e) => update('longitude', e.target.value)}
+              className={fieldClass + ' flex-1'}
+            />
+          </div>
         </div>
 
         {/* Beds & Baths */}
         <div className="flex gap-3">
-          <div className="flex-1 space-y-1.5">
-            <Label>Bedrooms</Label>
+          <div className="flex-1">
+            <label className={labelClass}>Bedrooms</label>
             <Select value={form.bedrooms} onValueChange={(v) => update('bedrooms', v)}>
-              <SelectTrigger><SelectValue placeholder="–" /></SelectTrigger>
+              <SelectTrigger className="border-[#EBEBEA]"><SelectValue placeholder="–" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="0">Studio</SelectItem>
                 {[1, 2, 3, 4].map((n) => (
@@ -249,10 +295,10 @@ export default function CreateListingPage() {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex-1 space-y-1.5">
-            <Label>Bathrooms</Label>
+          <div className="flex-1">
+            <label className={labelClass}>Bathrooms</label>
             <Select value={form.bathrooms} onValueChange={(v) => update('bathrooms', v)}>
-              <SelectTrigger><SelectValue placeholder="–" /></SelectTrigger>
+              <SelectTrigger className="border-[#EBEBEA]"><SelectValue placeholder="–" /></SelectTrigger>
               <SelectContent>
                 {[1, 2, 3].map((n) => (
                   <SelectItem key={n} value={String(n)}>{n}</SelectItem>
@@ -263,44 +309,46 @@ export default function CreateListingPage() {
         </div>
 
         {/* Toggles */}
-        <div className="flex gap-4">
-          <div className="flex flex-1 items-center justify-between rounded-lg border border-gray-200 px-3 py-3">
-            <Label>Furnished</Label>
+        <div className="flex gap-3">
+          <div className="flex flex-1 items-center justify-between rounded-md border border-[#EBEBEA] px-3 py-2.5">
+            <span className="text-sm text-[#191919]">Furnished</span>
             <Switch checked={form.isFurnished} onCheckedChange={(v) => update('isFurnished', v)} />
           </div>
-          <div className="flex flex-1 items-center justify-between rounded-lg border border-gray-200 px-3 py-3">
-            <Label className="text-xs">Utilities incl.</Label>
+          <div className="flex flex-1 items-center justify-between rounded-md border border-[#EBEBEA] px-3 py-2.5">
+            <span className="text-sm text-[#191919]">Utilities incl.</span>
             <Switch checked={form.utilitiesIncluded} onCheckedChange={(v) => update('utilitiesIncluded', v)} />
           </div>
         </div>
 
         {/* Dates */}
         <div className="flex gap-3">
-          <div className="flex-1 space-y-1.5">
-            <Label htmlFor="from">Available from *</Label>
-            <Input
+          <div className="flex-1">
+            <label htmlFor="from" className={labelClass}>Available from *</label>
+            <input
               id="from"
               type="date"
               value={form.availableFrom}
               onChange={(e) => update('availableFrom', e.target.value)}
               required
+              className={fieldClass}
             />
           </div>
-          <div className="flex-1 space-y-1.5">
-            <Label htmlFor="to">Available to *</Label>
-            <Input
+          <div className="flex-1">
+            <label htmlFor="to" className={labelClass}>Available to *</label>
+            <input
               id="to"
               type="date"
               value={form.availableTo}
               onChange={(e) => update('availableTo', e.target.value)}
               required
+              className={fieldClass}
             />
           </div>
         </div>
 
         {/* Tags */}
-        <div className="space-y-2">
-          <Label>Tags</Label>
+        <div>
+          <label className={labelClass}>Tags</label>
           <div className="flex flex-wrap gap-2">
             {LISTING_TAGS.map((tag) => (
               <button
@@ -308,10 +356,10 @@ export default function CreateListingPage() {
                 type="button"
                 onClick={() => toggleTag(tag)}
                 className={cn(
-                  'rounded-full px-3 py-1 text-xs font-medium border transition-colors',
+                  'rounded-md px-2.5 py-1 text-xs font-medium border transition-colors',
                   selectedTags.includes(tag)
-                    ? 'bg-blue-600 border-blue-600 text-white'
-                    : 'bg-white border-gray-300 text-gray-600 hover:border-blue-400'
+                    ? 'bg-[#2383E2] border-[#2383E2] text-white'
+                    : 'bg-white border-[#EBEBEA] text-[#6B6B6B] hover:border-[#2383E2] hover:text-[#2383E2]'
                 )}
               >
                 {tag}
@@ -321,14 +369,16 @@ export default function CreateListingPage() {
         </div>
 
         {error && (
-          <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 border border-red-200">
-            {error}
-          </p>
+          <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
         )}
 
-        <Button type="submit" className="w-full" size="lg" disabled={loading}>
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full h-10 rounded-md bg-[#2383E2] text-white text-sm font-medium hover:bg-[#1a6fc9] disabled:opacity-50 transition-colors"
+        >
           {loading ? 'Publishing…' : 'Publish listing'}
-        </Button>
+        </button>
       </form>
     </>
   );

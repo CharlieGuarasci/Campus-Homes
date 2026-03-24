@@ -6,9 +6,6 @@ import { useAuth } from '@/hooks/use-auth';
 import { useMessages } from '@/hooks/use-messages';
 import { createClient } from '@/lib/supabase/client';
 import { ChatBubble } from '@/components/chat-bubble';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { getAvatarInitials } from '@/lib/utils';
 import type { Profile, Listing } from '@/types';
 import Link from 'next/link';
@@ -66,35 +63,32 @@ export default function ChatPage() {
   const initials = getAvatarInitials(otherUser?.full_name ?? null);
 
   return (
-    // h-[100dvh] on mobile fills viewport; md:h-full fills the flex container from messages/layout.tsx
     <div className="flex flex-col h-[100dvh] md:h-full">
       {/* Header */}
-      <header className="shrink-0 bg-[#1a2035] px-4 pt-safe-top pb-3 flex items-center gap-3">
-        {/* Back link — only visible on mobile */}
-        <Link href="/messages" className="md:hidden text-white/70 hover:text-white shrink-0">
-          <ChevronLeft className="h-6 w-6" />
+      <header className="shrink-0 bg-white border-b border-[#EBEBEA] px-4 py-3 flex items-center gap-3">
+        <Link href="/messages" className="md:hidden text-[#6B6B6B] hover:text-[#191919] shrink-0">
+          <ChevronLeft className="h-5 w-5" />
         </Link>
-        <Avatar className="h-9 w-9 shrink-0">
-          {otherUser?.avatar_url && <AvatarImage src={otherUser.avatar_url} />}
-          <AvatarFallback className="text-xs">{initials}</AvatarFallback>
-        </Avatar>
+        <span className="h-8 w-8 rounded-full bg-[#F0F0EE] text-[#6B6B6B] text-xs font-medium flex items-center justify-center shrink-0">
+          {initials}
+        </span>
         <div className="min-w-0">
-          <p className="font-semibold text-white text-sm truncate">{otherUser?.full_name ?? 'Loading…'}</p>
+          <p className="text-sm font-medium text-[#191919] truncate">{otherUser?.full_name ?? 'Loading…'}</p>
           {listing && (
-            <p className="text-xs text-white/60 truncate">{listing.title}</p>
+            <p className="text-xs text-[#A0A0A0] truncate">{listing.title}</p>
           )}
         </div>
       </header>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 bg-gray-50">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 bg-white">
         {loading ? (
           <div className="flex items-center justify-center h-32">
-            <div className="h-6 w-6 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" />
+            <div className="h-5 w-5 rounded-full border-2 border-[#2383E2] border-t-transparent animate-spin" />
           </div>
         ) : messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-sm text-gray-400">No messages yet. Say hi!</p>
+            <p className="text-sm text-[#A0A0A0]">No messages yet. Say hi!</p>
           </div>
         ) : (
           messages.map((msg, i) => {
@@ -110,18 +104,22 @@ export default function ChatPage() {
       </div>
 
       {/* Input bar */}
-      <div className="shrink-0 border-t border-gray-200 bg-white px-4 py-3 safe-area-pb">
+      <div className="shrink-0 border-t border-[#EBEBEA] bg-white px-4 py-3 safe-area-pb">
         <form onSubmit={handleSend} className="flex gap-2">
-          <Input
+          <input
             value={text}
             onChange={(e) => setText(e.target.value)}
             placeholder="Type a message…"
-            className="flex-1"
             autoComplete="off"
+            className="flex-1 h-9 rounded-md bg-[#F7F7F5] border border-[#EBEBEA] px-3 text-sm text-[#191919] placeholder:text-[#A0A0A0] focus:outline-none focus:border-[#2383E2] transition-colors"
           />
-          <Button type="submit" size="icon" disabled={!text.trim() || sending}>
+          <button
+            type="submit"
+            disabled={!text.trim() || sending}
+            className="h-9 w-9 rounded-md bg-[#2383E2] text-white flex items-center justify-center hover:bg-[#1a6fc9] disabled:opacity-40 transition-colors"
+          >
             <Send className="h-4 w-4" />
-          </Button>
+          </button>
         </form>
       </div>
     </div>

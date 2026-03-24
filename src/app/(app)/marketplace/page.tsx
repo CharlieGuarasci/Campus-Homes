@@ -4,14 +4,17 @@ import { Search, Plus } from 'lucide-react';
 import { ListingCard } from '@/components/listing-card';
 import { ListingDrawer } from '@/components/listing-drawer';
 import { FilterSheet } from '@/components/filter-sheet';
-import { Input } from '@/components/ui/input';
 import { useListings, useSavedListings } from '@/hooks/use-listings';
 import { useAuth } from '@/hooks/use-auth';
+import { useMediaQuery } from '@/hooks/use-media-query';
 import type { ListingFilters, ListingWithDetails } from '@/types';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function MarketplacePage() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const router = useRouter();
+  const isDesktop = useMediaQuery('(min-width: 768px)');
   const [search, setSearch] = useState('');
   const [activeFilters, setActiveFilters] = useState<ListingFilters>({});
   const [selectedListing, setSelectedListing] = useState<ListingWithDetails | null>(null);
@@ -24,8 +27,12 @@ export default function MarketplacePage() {
   const listingsWithSaved = listings.map((l) => ({ ...l, is_saved: savedIds.has(l.id) }));
 
   function handleCardTap(listing: ListingWithDetails) {
-    setSelectedListing(listing);
-    setDrawerOpen(true);
+    if (isDesktop) {
+      router.push(`/listing/${listing.id}`);
+    } else {
+      setSelectedListing(listing);
+      setDrawerOpen(true);
+    }
   }
 
   const handleSaveToggle = useCallback(
@@ -38,50 +45,54 @@ export default function MarketplacePage() {
   return (
     <>
       {/* Header */}
-      <header className="sticky top-0 z-30 bg-[#1a2035] px-4 pt-safe-top pb-3 shadow-md">
-        <div className="flex items-center gap-2 pt-2 md:hidden">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500">
-            <span className="text-sm font-bold text-white">E</span>
+      <header className="sticky top-0 z-30 bg-white border-b border-[#EBEBEA] px-4 py-3">
+        <div className="flex items-center gap-2 mb-3 md:hidden">
+          <div className="flex h-7 w-7 items-center justify-center rounded-md bg-[#2383E2]">
+            <span className="text-xs font-medium text-white">E</span>
           </div>
-          <h1 className="text-lg font-bold text-white">Exchange Housing</h1>
+          <h1 className="text-base font-medium text-[#191919]">Exchange Housing</h1>
         </div>
-        {/* Desktop: just the page title, logo is in sidebar */}
-        <h1 className="hidden md:block text-xl font-bold text-white pt-2">Marketplace</h1>
-        <div className="mt-3 flex gap-2">
+        <h1 className="hidden md:block text-base font-medium text-[#191919] mb-3">Marketplace</h1>
+        <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
-            <Input
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A0A0A0]" strokeWidth={1.5} />
+            <input
+              type="text"
               placeholder="Search listings…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:bg-white focus:text-gray-900 focus:placeholder:text-gray-400 transition-colors"
+              className="w-full pl-9 pr-3 h-9 rounded-md bg-[#F7F7F5] border border-[#EBEBEA] text-sm text-[#191919] placeholder:text-[#A0A0A0] focus:outline-none focus:border-[#2383E2] transition-colors"
             />
           </div>
           <FilterSheet filters={activeFilters} onApply={setActiveFilters} />
         </div>
       </header>
 
-      {/* Feed — single col on mobile, 2-col grid on desktop */}
-      <div className="px-4 py-4 max-w-5xl mx-auto">
+      {/* Feed */}
+      <div className="px-4 py-5 max-w-5xl mx-auto">
         {error && (
-          <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-600 mb-3">
-            Error loading listings: {error}
+          <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600 mb-4">
+            {error}
           </div>
         )}
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="h-64 rounded-xl bg-gray-200 animate-pulse" />
+              <div key={i} className="space-y-2">
+                <div className="aspect-[3/2] rounded-lg bg-[#F7F7F5] animate-pulse" />
+                <div className="h-4 w-24 rounded bg-[#F7F7F5] animate-pulse" />
+                <div className="h-3 w-40 rounded bg-[#F7F7F5] animate-pulse" />
+              </div>
             ))}
           </div>
         ) : listingsWithSaved.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
+          <div className="flex flex-col items-center justify-center py-20 text-center">
             <p className="text-4xl mb-3">🏠</p>
-            <p className="font-semibold text-gray-700">No listings found</p>
-            <p className="mt-1 text-sm text-gray-400">Try adjusting your filters</p>
+            <p className="text-sm font-medium text-[#191919]">No listings found</p>
+            <p className="mt-1 text-sm text-[#A0A0A0]">Try adjusting your filters</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {listingsWithSaved.map((listing) => (
               <ListingCard
                 key={listing.id}
@@ -94,13 +105,13 @@ export default function MarketplacePage() {
         )}
       </div>
 
-      {/* FAB — adjusted position on desktop (no bottom nav offset) */}
+      {/* FAB */}
       <Link
         href="/create-listing"
-        className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-blue-600 text-white shadow-lg hover:bg-blue-700 active:scale-95 transition-transform"
+        className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-[#2383E2] text-white hover:bg-[#1a6fc9] active:scale-95 transition-all"
         aria-label="Create listing"
       >
-        <Plus className="h-6 w-6" />
+        <Plus className="h-5 w-5" />
       </Link>
 
       <ListingDrawer
@@ -108,6 +119,7 @@ export default function MarketplacePage() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         currentUserId={user?.id}
+        currentUserProfile={profile}
       />
     </>
   );

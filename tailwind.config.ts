@@ -9,10 +9,17 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        navy: {
-          900: '#0f1629',
-          800: '#1a2035',
-          700: '#243050',
+        notion: {
+          bg: '#FFFFFF',
+          sidebar: '#F7F7F5',
+          hover: '#F0F0EE',
+          border: '#E8E8E5',
+          border2: '#EBEBEA',
+          text: '#191919',
+          muted: '#6B6B6B',
+          faint: '#A0A0A0',
+          accent: '#2383E2',
+          'accent-hover': '#1a6fc9',
         },
       },
       fontFamily: {

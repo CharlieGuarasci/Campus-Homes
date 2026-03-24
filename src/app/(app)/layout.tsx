@@ -6,10 +6,9 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
-    <div className="min-h-screen bg-gray-50 md:flex">
+    <div className="min-h-screen bg-white md:flex">
       <BottomNavWrapper userId={user?.id} />
-      {/* On mobile: full width with bottom nav padding. On desktop: push right of 64 sidebar */}
-      <main className="flex-1 min-w-0 pb-20 md:pb-0 md:ml-64">
+      <main className="flex-1 min-w-0 pb-20 md:pb-0 md:ml-60">
         {children}
       </main>
     </div>

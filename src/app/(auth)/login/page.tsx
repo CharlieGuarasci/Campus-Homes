@@ -3,9 +3,6 @@ import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,28 +30,29 @@ export default function LoginPage() {
   async function handleForgotPassword() {
     if (!email) { setError('Enter your email address first.'); return; }
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/auth/callback`,
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`,
     });
     if (resetError) { setError(resetError.message); }
     else { setError(''); alert('Password reset email sent. Check your inbox.'); }
   }
 
+  const fieldClass = "w-full h-9 rounded-md border border-[#EBEBEA] bg-white px-3 text-sm text-[#191919] placeholder:text-[#A0A0A0] focus:outline-none focus:border-[#2383E2] transition-colors";
+
   return (
     <div className="flex flex-1 flex-col items-center justify-center px-6 py-12">
-      {/* Logo / Brand */}
       <div className="mb-8 text-center">
-        <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600">
-          <span className="text-2xl font-bold text-white">E</span>
+        <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-[#2383E2]">
+          <span className="text-base font-semibold text-white">E</span>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Exchange Housing</h1>
-        <p className="mt-1 text-sm text-gray-500">Find your home away from home</p>
+        <h1 className="text-xl font-medium text-[#191919]">Exchange Housing</h1>
+        <p className="mt-1 text-sm text-[#A0A0A0]">Find your home away from home</p>
       </div>
 
       <div className="w-full max-w-sm">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div className="space-y-1.5">
-            <Label htmlFor="email">University email</Label>
-            <Input
+            <label htmlFor="email" className="block text-xs font-medium text-[#6B6B6B] uppercase tracking-wide">University email</label>
+            <input
               id="email"
               type="email"
               placeholder="you@queensu.ca"
@@ -62,11 +60,12 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               autoComplete="email"
+              className={fieldClass}
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password">Password</Label>
-            <Input
+            <label htmlFor="password" className="block text-xs font-medium text-[#6B6B6B] uppercase tracking-wide">Password</label>
+            <input
               id="password"
               type="password"
               placeholder="••••••••"
@@ -74,31 +73,34 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
+              className={fieldClass}
             />
           </div>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600 border border-red-200">
-              {error}
-            </p>
+            <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
           )}
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full h-9 rounded-md bg-[#2383E2] text-white text-sm font-medium hover:bg-[#1a6fc9] disabled:opacity-50 transition-colors"
+          >
             {loading ? 'Signing in…' : 'Sign in'}
-          </Button>
+          </button>
         </form>
 
         <button
           type="button"
           onClick={handleForgotPassword}
-          className="mt-3 w-full text-center text-sm text-blue-600 hover:underline"
+          className="mt-3 w-full text-center text-sm text-[#2383E2] hover:underline"
         >
           Forgot password?
         </button>
 
-        <p className="mt-6 text-center text-sm text-gray-500">
+        <p className="mt-6 text-center text-sm text-[#A0A0A0]">
           Don&apos;t have an account?{' '}
-          <Link href="/signup" className="font-medium text-blue-600 hover:underline">
+          <Link href="/signup" className="font-medium text-[#2383E2] hover:underline">
             Sign up
           </Link>
         </p>

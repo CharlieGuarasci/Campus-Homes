@@ -12,16 +12,16 @@ export function ChatBubble({ message, isSent, showTime = false }: ChatBubbleProp
     <div className={cn('flex flex-col', isSent ? 'items-end' : 'items-start')}>
       <div
         className={cn(
-          'max-w-[75%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
+          'max-w-[75%] rounded-2xl px-3.5 py-2 text-sm leading-relaxed',
           isSent
-            ? 'bg-blue-600 text-white rounded-br-sm'
-            : 'bg-gray-100 text-gray-900 rounded-bl-sm'
+            ? 'bg-[#2383E2] text-white rounded-br-sm'
+            : 'bg-[#F0F0EE] text-[#191919] rounded-bl-sm'
         )}
       >
         {message.content}
       </div>
       {showTime && (
-        <span className="mt-1 text-[10px] text-gray-400">
+        <span className="mt-1 text-[10px] text-[#A0A0A0]">
           {formatRelativeTime(message.created_at)}
         </span>
       )}
