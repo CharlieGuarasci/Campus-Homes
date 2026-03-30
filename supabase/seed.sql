@@ -1,0 +1,2 @@
+-- Seeding is handled by Prisma. Run: npm run seed
+-- See prisma/seed.ts for the full seed script.

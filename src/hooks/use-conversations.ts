@@ -60,7 +60,7 @@ export function useConversations(userId: string | undefined) {
 
     if (!userId) return;
     const channel = supabase
-      .channel('conversations-refresh')
+      .channel(`conversations-refresh-${userId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
         fetchConversations();
       })

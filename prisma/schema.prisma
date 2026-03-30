@@ -1,0 +1,162 @@
+// Prisma schema — introspected from Supabase migrations
+// DO NOT run `prisma migrate` — Supabase migrations are the source of truth for schema.
+// To regenerate after a schema change: npx prisma db pull && npx prisma generate
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// profiles.id is a FK to auth.users(id) in Supabase's internal auth schema.
+// Prisma only sees the public schema, so this cross-schema FK is not modelled here —
+// it is enforced at the DB level. Always create the auth user before the profile.
+model Profile {
+  id                    String             @id @db.Uuid
+  email                 String
+  full_name             String?
+  university            String?            @default("Queen's University")
+  program               String?
+  year_of_study         Int?
+  bio                   String?
+  avatar_url            String?
+  created_at            DateTime           @default(now()) @db.Timestamptz(6)
+  home_university       String?
+  age                   Int?
+  sleep_habits          String?
+  party_level           String?
+  substance_preferences String[]
+  cleanliness           String?
+  personality_traits    String[]
+  interests             String[]
+  budget_min            Decimal?           @db.Decimal
+  budget_max            Decimal?           @db.Decimal
+  move_in_date          DateTime?          @db.Date
+  move_out_date         DateTime?          @db.Date
+
+  listings              Listing[]
+  conversations_as_p1   Conversation[]     @relation("participant1")
+  conversations_as_p2   Conversation[]     @relation("participant2")
+  messages              Message[]
+  saved_listings        SavedListing[]
+
+  @@map("profiles")
+}
+
+model Listing {
+  id                  String             @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  user_id             String             @db.Uuid
+  title               String
+  description         String?
+  price_per_month     Decimal            @db.Decimal
+  currency            String?            @default("CAD")
+  address             String?
+  neighborhood        String?
+  bedrooms            Int?
+  bathrooms           Int?
+  is_furnished        Boolean?           @default(false)
+  utilities_included  Boolean?           @default(false)
+  available_from      DateTime           @db.Date
+  available_to        DateTime           @db.Date
+  tags                String[]
+  status              String?            @default("active")
+  created_at          DateTime           @default(now()) @db.Timestamptz(6)
+  updated_at          DateTime           @default(now()) @db.Timestamptz(6)
+  room_size_sqft      Decimal?           @db.Decimal
+  room_furnishings    String[]
+  has_ac              Boolean?           @default(false)
+  has_heating         Boolean?           @default(true)
+  has_laundry         Boolean?           @default(false)
+  laundry_type        String?
+  has_dishwasher      Boolean?           @default(false)
+  has_parking         Boolean?           @default(false)
+  kitchen_arrangement String?
+  guest_policy        String?
+  house_cleanliness   String?
+  latitude            Decimal?           @db.Decimal
+  longitude           Decimal?           @db.Decimal
+
+  user                Profile            @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  listing_images      ListingImage[]
+  listing_housemates  ListingHousemate[]
+  conversations       Conversation[]
+  saved_by            SavedListing[]
+
+  @@map("listings")
+}
+
+model ListingImage {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listing_id    String   @db.Uuid
+  image_url     String
+  display_order Int      @default(0)
+  created_at    DateTime @default(now()) @db.Timestamptz(6)
+
+  listing       Listing  @relation(fields: [listing_id], references: [id], onDelete: Cascade)
+
+  @@map("listing_images")
+}
+
+model ListingHousemate {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listing_id            String   @db.Uuid
+  name                  String
+  program               String?
+  year_of_study         Int?
+  sleep_habits          String?
+  party_level           String?
+  personality_traits    String[]
+  interests             String[]
+  substance_preferences String[]
+  display_order         Int      @default(0)
+  created_at            DateTime @default(now()) @db.Timestamptz(6)
+
+  listing               Listing  @relation(fields: [listing_id], references: [id], onDelete: Cascade)
+
+  @@map("listing_housemates")
+}
+
+model Conversation {
+  id            String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  listing_id    String?   @db.Uuid
+  participant_1 String    @db.Uuid
+  participant_2 String    @db.Uuid
+  created_at    DateTime  @default(now()) @db.Timestamptz(6)
+  updated_at    DateTime  @default(now()) @db.Timestamptz(6)
+
+  listing       Listing?  @relation(fields: [listing_id], references: [id], onDelete: SetNull)
+  p1            Profile   @relation("participant1", fields: [participant_1], references: [id], onDelete: Cascade)
+  p2            Profile   @relation("participant2", fields: [participant_2], references: [id], onDelete: Cascade)
+  messages      Message[]
+
+  @@unique([listing_id, participant_1, participant_2])
+  @@map("conversations")
+}
+
+model Message {
+  id              String       @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  conversation_id String       @db.Uuid
+  sender_id       String       @db.Uuid
+  content         String
+  is_read         Boolean      @default(false)
+  created_at      DateTime     @default(now()) @db.Timestamptz(6)
+
+  conversation    Conversation @relation(fields: [conversation_id], references: [id], onDelete: Cascade)
+  sender          Profile      @relation(fields: [sender_id], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model SavedListing {
+  user_id    String   @db.Uuid
+  listing_id String   @db.Uuid
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  user       Profile  @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  listing    Listing  @relation(fields: [listing_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, listing_id])
+  @@map("saved_listings")
+}

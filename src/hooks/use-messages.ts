@@ -42,7 +42,10 @@ export function useMessages(conversationId: string, currentUserId: string | unde
           filter: `conversation_id=eq.${conversationId}`,
         },
         (payload) => {
-          setMessages((prev) => [...prev, payload.new as Message]);
+          setMessages((prev) => {
+            if (prev.some((m) => m.id === (payload.new as Message).id)) return prev;
+            return [...prev, payload.new as Message];
+          });
           markRead();
         }
       )
@@ -58,7 +61,8 @@ export function useMessages(conversationId: string, currentUserId: string | unde
       sender_id: currentUserId,
       content: content.trim(),
     });
-  }, [conversationId, currentUserId, supabase]);
+    await fetchMessages();
+  }, [conversationId, currentUserId, fetchMessages, supabase]);
 
   return { messages, loading, sendMessage };
 }
