@@ -23,7 +23,9 @@ A mobile-first housing marketplace for university exchange students, built with 
 
 ## Setup
 
-### 1. Clone and install
+### Production setup
+
+1. **Clone and install**
 
 ```bash
 git clone <repo-url>
@@ -31,60 +33,130 @@ cd exchange
 npm install
 ```
 
-### 2. Environment variables
-
-Copy `.env.example` to `.env.local` and fill in your Supabase credentials:
-
-```bash
-cp .env.example .env.local
-```
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-```
-
-The values for this project are already in `.env.local` for development.
-
-### 3. Set up Supabase
-
-Run the migration in the Supabase SQL editor:
-
-1. Go to your [Supabase dashboard](https://supabase.com/dashboard)
-2. Open **SQL Editor**
-3. Paste and run the contents of `supabase/migrations/20240101000000_initial_schema.sql`
-
-This creates all tables, RLS policies, triggers, and seeds 10 demo listings.
-
-### 4. Create Storage bucket
-
-In the Supabase dashboard → **Storage**:
-
-1. Create a new bucket named `listing-images`
-2. Set it to **Public**
-3. Add these storage policies in the SQL editor:
-
-```sql
--- Public read
-create policy "listing_images_public_read" on storage.objects
-  for select using (bucket_id = 'listing-images');
-
--- Authenticated upload
-create policy "listing_images_auth_upload" on storage.objects
-  for insert with check (bucket_id = 'listing-images' and auth.role() = 'authenticated');
-
--- Owner delete
-create policy "listing_images_owner_delete" on storage.objects
-  for delete using (bucket_id = 'listing-images' and auth.uid()::text = (storage.foldername(name))[1]);
-```
-
-### 5. Run locally
+2. **Run**
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). You'll be redirected to `/login`.
+---
+
+## Local development (recommended)
+
+Use a local Supabase instance so you never touch production data.
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) running
+- [Supabase CLI](https://supabase.com/docs/guides/cli) — installed automatically via `npm install` as a dev dependency
+
+### 1. Start local Supabase
+
+```bash
+npm run supabase:start
+```
+
+This spins up a full Supabase stack locally (Postgres, Auth, Studio, Realtime). Credentials are pre-filled in `.env.development` — no manual copy needed.
+
+> **Supabase Studio** (local DB browser) runs at http://127.0.0.1:54323
+
+### 2. Apply migrations
+
+```bash
+npm run db:reset
+```
+
+Runs all migration files in `supabase/migrations/` against the local database, creating all tables, triggers, and RLS policies.
+
+### 3. Generate the Prisma client
+
+```bash
+npx prisma generate
+```
+
+> **Optional:** if you've added new migrations, re-introspect the schema first: `npm run prisma:pull`
+
+### 4. Seed the local database
+
+```bash
+npm run seed
+```
+
+Creates 10 test users, 8 listings with housemates and images, 3 conversations with messages, and saved listings.
+
+**Test accounts** (password: `password123`):
+
+| Email | Name | Role |
+|---|---|---|
+| emma.chen@queensu.ca | Emma Chen | Exchange (UBC) |
+| liam.obrien@queensu.ca | Liam O'Brien | Exchange (Trinity Dublin) |
+| sofia.martinez@queensu.ca | Sofia Martinez | Exchange (UBA) |
+| james.wilson@queensu.ca | James Wilson | Lister |
+| priya.patel@queensu.ca | Priya Patel | Lister |
+| marcus.johnson@queensu.ca | Marcus Johnson | Lister |
+| aisha.rahman@queensu.ca | Aisha Rahman | Exchange (Edinburgh) |
+| tom.anderson@queensu.ca | Tom Anderson | Exchange (Sydney) |
+| sarah.kim@queensu.ca | Sarah Kim | Lister |
+| alex.dubois@queensu.ca | Alex Dubois | Exchange (McGill) |
+
+### 5. Run the app
+
+```bash
+npm run dev
+```
+
+### Re-seeding
+
+To wipe and re-seed from scratch:
+
+```bash
+npm run db:reset && npm run seed
+```
+
+### Connecting to production
+
+To temporarily point your local app at the production database, add the production credentials to `.env.local` (this file is gitignored and overrides `.env.development`):
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<production anon key>
+```
+
+Remove those lines from `.env.local` to go back to local.
+
+---
+
+### Prisma
+
+Prisma is used exclusively for seeding. The app queries Supabase directly via the JS SDK — do not use Prisma in application code.
+
+| Command | Purpose |
+|---|---|
+| `npm run seed` | Run `prisma/seed.ts` against local DB |
+| `npm run prisma:pull` | Re-introspect schema from local DB into `prisma/schema.prisma` |
+| `npm run prisma:generate` | Regenerate the typed Prisma client |
+
+> **Schema source of truth:** `supabase/migrations/` — never run `prisma migrate`.
+
+---
+
+### Storage bucket (production only)
+
+In the Supabase dashboard → **Storage**:
+
+1. Create a bucket named `listing-images`, set to **Public**
+2. Add storage policies via the SQL editor:
+
+```sql
+create policy "listing_images_public_read" on storage.objects
+  for select using (bucket_id = 'listing-images');
+
+create policy "listing_images_auth_upload" on storage.objects
+  for insert with check (bucket_id = 'listing-images' and auth.role() = 'authenticated');
+
+create policy "listing_images_owner_delete" on storage.objects
+  for delete using (bucket_id = 'listing-images' and auth.uid()::text = (storage.foldername(name))[1]);
+```
 
 ## Project structure
 
