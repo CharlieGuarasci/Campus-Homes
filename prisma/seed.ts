@@ -16,6 +16,27 @@ const prisma = new PrismaClient({ adapter })
 // ---------------------------------------------------------------------------
 
 const USERS = [
+    {
+    email: '22dsn2@queensu.ca',
+    password: 'batman',
+    full_name: 'Charlie Guarasci',
+    home_university: 'University of British Columbia',
+    university: "Queen's University",
+    program: 'Computer Science',
+    year_of_study: 3,
+    age: 22,
+    bio: 'Im the goat',
+    sleep_habits: 'early_bird',
+    party_level: 'once_a_month',
+    cleanliness: 'very_clean',
+    personality_traits: ['social', 'adventurous', 'organised'],
+    interests: ['fitness', 'travel', 'photography'],
+    substance_preferences: [] as string[],
+    budget_min: 700,
+    budget_max: 1100,
+    move_in_date: new Date('2026-09-01'),
+    move_out_date: new Date('2027-04-30'),
+  },
   {
     email: 'emma.chen@queensu.ca',
     password: 'password123',
