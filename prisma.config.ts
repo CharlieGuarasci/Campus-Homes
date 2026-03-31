@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 
 // Prisma CLI doesn't load Next.js env files, so we load .env.development manually.
 // For production CLI operations, set DATABASE_URL in the environment directly.
-dotenv.config({ path: path.resolve(process.cwd(), '.env.development') })
+dotenv.config({ path: path.resolve(process.cwd(), '.env.local') })
 
 export default defineConfig({
   migrations: {

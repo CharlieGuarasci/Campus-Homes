@@ -33,14 +33,7 @@ cd exchange
 npm install
 ```
 
-2. **Environment** — copy production credentials into `.env.local` (gitignored):
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://xckosvabbyyiunmlbdgm.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<production anon key>
-```
-
-3. **Run**
+2. **Run**
 
 ```bash
 npm run dev
@@ -125,7 +118,7 @@ npm run db:reset && npm run seed
 To temporarily point your local app at the production database, add the production credentials to `.env.local` (this file is gitignored and overrides `.env.development`):
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://xckosvabbyyiunmlbdgm.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<production anon key>
 ```
 
